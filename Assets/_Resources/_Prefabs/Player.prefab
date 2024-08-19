@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 2423577616829719249}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.439, z: 0.432}
+  m_LocalPosition: {x: 0, y: 0.439, z: 0.391}
   m_LocalScale: {x: 0.47947, y: 0.19234, z: 0.32468}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -273,7 +273,7 @@ CharacterController:
   m_Radius: 0.25
   m_SlopeLimit: 45
   m_StepOffset: 0.3
-  m_SkinWidth: 0.08
+  m_SkinWidth: 0.2
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &636601702958198594
@@ -365,7 +365,7 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  boxPrefab: {fileID: 3453268344270236086, guid: f06e5147e46674c448a331318a28b202, type: 3}
+  boxPrefab: {fileID: 5409050691698557301, guid: d6494557fcc5e4c43a41b469b1f292da, type: 3}
   spawnHeight: 0
   spawnKey: 101
   maxRayDistance: 100
