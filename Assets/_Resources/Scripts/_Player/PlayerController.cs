@@ -24,9 +24,12 @@ public class PlayerController : NetworkBehaviour
     private float cameraYOffset = 0.4f;
     private Camera playerCamera;
 
+    [SerializeField]
+    private RotateGun rotateGun; // Reference to the RotateGun script
+
     void Start()
     {
-        // Mirror's equivalent of checking if this is the local player
+        // Check if this is the local player
         if (!isLocalPlayer)
         {
             return;
@@ -34,8 +37,16 @@ public class PlayerController : NetworkBehaviour
         
         characterController = GetComponent<CharacterController>();
         playerCamera = Camera.main;
+
+        // Set camera position and parent to the player
         playerCamera.transform.position = new Vector3(transform.position.x, transform.position.y + cameraYOffset, transform.position.z);
         playerCamera.transform.SetParent(transform);
+
+        // Assign the local player's camera to the RotateGun script
+        if (rotateGun != null)
+        {
+            rotateGun.SetPlayerCamera(playerCamera.transform);
+        }
 
         // Lock cursor
         Cursor.lockState = CursorLockMode.Locked;
