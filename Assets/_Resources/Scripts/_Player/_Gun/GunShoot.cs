@@ -19,6 +19,11 @@ public class GunShoot : MonoBehaviour
     [SerializeField]
     private AudioClip gunShot;
 
+    [SerializeField]
+    private GameObject muzzleFlashPrefab; // Muzzle flash prefab
+
+    private GameObject currentMuzzleFlash; // Current muzzle flash instance
+
     void Start()
     {
         // Calculate fireRate based on rounds per second
@@ -69,6 +74,17 @@ public class GunShoot : MonoBehaviour
         if (bulletPrefab != null && bulletSpawnPoint != null && gunShot != null)
         {
             source.PlayOneShot(gunShot);
+
+            // Instantiate and show the muzzle flash
+            if (muzzleFlashPrefab != null)
+            {
+                if (currentMuzzleFlash != null)
+                {
+                    Destroy(currentMuzzleFlash);
+                }
+                currentMuzzleFlash = Instantiate(muzzleFlashPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+                Destroy(currentMuzzleFlash, 0.1f); // Destroy after a short delay
+            }
 
             // Instantiate the bullet at the spawn point's position and rotation
             GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
