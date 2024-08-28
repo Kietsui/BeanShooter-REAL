@@ -1,7 +1,8 @@
 using System.Collections;
 using UnityEngine;
+using Mirror;
 
-public class GunShoot : MonoBehaviour
+public class GunShoot : NetworkBehaviour
 {
     public Transform bulletSpawnPoint; // Reference to the bullet spawn point
     public GameObject bulletPrefab;    // Reference to the bullet prefab
@@ -34,6 +35,8 @@ public class GunShoot : MonoBehaviour
 
     void Update()
     {
+        if (!isLocalPlayer) return; // Ensure that only the local player can control their gun
+
         if (Input.GetKeyDown(key))
         {
             StartFiring();
@@ -87,23 +90,38 @@ public class GunShoot : MonoBehaviour
             }
 
             // Instantiate the bullet at the spawn point's position and rotation
-            GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
-
-            // Ensure the bullet has a Rigidbody component
-            Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
-            if (bulletRb != null)
-            {
-                // Set the bullet's velocity to move forward relative to the spawn point
-                bulletRb.velocity = bulletSpawnPoint.forward * bulletSpeed;
-            }
-            else
-            {
-                Debug.LogError("The bulletPrefab does not have a Rigidbody component.");
-            }
+            CmdShoot(); // Call command to handle bullet instantiation on the server
         }
         else
         {
             Debug.LogError("BulletPrefab or BulletSpawnPoint is not assigned.");
+        }
+    }
+
+    [Command]
+    void CmdShoot()
+    {
+        // Instantiate the bullet on the server
+        GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+        NetworkServer.Spawn(bullet);
+
+        // Set the bullet's velocity
+        Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
+        if (bulletRb != null)
+        {
+            bulletRb.velocity = bulletSpawnPoint.forward * bulletSpeed;
+        }
+        else
+        {
+            Debug.LogError("The bulletPrefab does not have a Rigidbody component.");
+        }
+
+        // Optionally handle muzzle flash instantiation on the server
+        if (muzzleFlashPrefab != null)
+        {
+            GameObject muzzleFlash = Instantiate(muzzleFlashPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+            NetworkServer.Spawn(muzzleFlash);
+            Destroy(muzzleFlash, 0.1f); // Destroy after a short delay
         }
     }
 }

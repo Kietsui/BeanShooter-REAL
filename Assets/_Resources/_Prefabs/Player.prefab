@@ -226,6 +226,7 @@ GameObject:
   - component: {fileID: 636601702958198594}
   - component: {fileID: 7925598876096890783}
   - component: {fileID: 6631810006241149011}
+  - component: {fileID: 1920525593976565702}
   - component: {fileID: 132771787308230162}
   - component: {fileID: 1854170841403613737}
   - component: {fileID: 215553192764431063}
@@ -321,6 +322,7 @@ MonoBehaviour:
   key: 323
   roundsPerSecond: 10
   gunShot: {fileID: 8300000, guid: 689742e190ae94a48be4f5ee4d96303a, type: 3}
+  muzzleFlashPrefab: {fileID: 0}
 --- !u!114 &6631810006241149011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -340,6 +342,20 @@ MonoBehaviour:
   spawnHeight: 10
   spawnKey: 101
   maxRayDistance: 100
+--- !u!114 &1920525593976565702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5146759792167071894}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c070f89fe3df9d448b833ce4b641828, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerHp: 0
+  playerMaxHp: 250
 --- !u!82 &132771787308230162
 AudioSource:
   m_ObjectHideFlags: 0
