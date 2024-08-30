@@ -408,7 +408,7 @@ MonoBehaviour:
   autoStartServerBuild: 0
   autoConnectClientBuild: 0
   offlineScene: 
-  onlineScene: Assets/_Resources/_Maps/SampleScene.unity
+  onlineScene: 
   offlineSceneLoadDelay: 0
   transport: {fileID: 1148707520}
   networkAddress: localhost
