@@ -12,12 +12,13 @@ GameObject:
   - component: {fileID: 6892474263715997448}
   - component: {fileID: 4958854006838858377}
   - component: {fileID: 6489458821664367620}
+  - component: {fileID: -6515267746164389636}
   - component: {fileID: 177985712989841137}
   - component: {fileID: -6076760224601549594}
   - component: {fileID: -6257994049010953547}
   m_Layer: 0
   m_Name: AbilityCube
-  m_TagString: Untagged
+  m_TagString: AbilityCube
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -102,12 +103,29 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 1
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-6515267746164389636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3453268344270236086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3b8d532a35ad74eb9aa5a2f80cdd86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+  abilityDmg: 100
+  hasHitPlayer: 0
 --- !u!54 &177985712989841137
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -8,6 +8,7 @@ public class SpawnBox : NetworkBehaviour
     public float spawnHeight = 5f; // The height above the hit point to spawn the box
     public KeyCode spawnKey = KeyCode.E; // The key to press for spawning the box
     public float maxRayDistance = 100f; // Maximum distance for the raycast
+    public int abilityDmg = 100;
 
     void Update()
     {
@@ -25,6 +26,8 @@ public class SpawnBox : NetworkBehaviour
             }
         }
     }
+
+    
 
     [Command]
     void CmdSpawnBox(Vector3 spawnPosition)

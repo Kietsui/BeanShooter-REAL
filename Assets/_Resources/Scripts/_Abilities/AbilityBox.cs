@@ -1,16 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
+using JetBrains.Annotations;
+using System.Linq.Expressions;
 
-public class Bullet : NetworkBehaviour
+public class abilityBox : NetworkBehaviour
 {
-    [SerializeField] private int bulletDmg = 40;
+    [SerializeField] private int abilityDmg = 100;
 
+    public bool hasHitPlayer = false;
 
     private void OnTriggerEnter(Collider collision)
     {
-        if (collision.CompareTag("Player"))
+        if (collision.CompareTag("Player") && hasHitPlayer == false)
         {
             if (isServer)
             {
@@ -18,7 +19,9 @@ public class Bullet : NetworkBehaviour
 
                 if (playerHealth != null)
                 {
-                    playerHealth.TakeDamage(bulletDmg);
+                    playerHealth.TakeDamage(abilityDmg);
+                    hasHitPlayer = true;
+                    Debug.Log(hasHitPlayer);
                 }
                 else
                 {
@@ -27,12 +30,7 @@ public class Bullet : NetworkBehaviour
             }
 
             // Destroy the bullet on all clients
-            NetworkServer.Destroy(gameObject); // This is server-side and works across clients
-        }
-        else if (collision.CompareTag("Environment"))
-        {
-            Destroy(gameObject);
+            //NetworkServer.Destroy(gameObject); // This is server-side and works across clients
         }
     }
-    
 }

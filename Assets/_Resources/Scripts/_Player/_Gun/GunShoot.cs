@@ -4,38 +4,34 @@ using Mirror;
 
 public class GunShoot : NetworkBehaviour
 {
-    public Transform bulletSpawnPoint; // Reference to the bullet spawn point
-    public GameObject bulletPrefab;    // Reference to the bullet prefab
-    public float bulletSpeed = 10f;    // Speed of the bullet
-    public KeyCode key;                // The key to trigger shooting
+    public Transform bulletSpawnPoint;  // Reference to the bullet spawn point
+    public GameObject bulletPrefab;     // Reference to the bullet prefab
+    public float bulletSpeed = 10f;     // Speed of the bullet
+    public KeyCode key;                 // The key to trigger shooting
 
     [Tooltip("Fire rate in rounds per second (RPS)")]
     public float roundsPerSecond = 10f; // Fire rate in rounds per second (RPS)
 
-    private bool isFiring = false;     // Flag to track if the gun is currently firing
-
-    private float fireRate;            // Time between shots (calculated from RPS)
+    private bool isFiring = false;      // Flag to track if the gun is currently firing
+    private float fireRate;             // Time between shots (calculated from RPS)
 
     private AudioSource source;
-    [SerializeField]
-    private AudioClip gunShot;
+    [SerializeField] private AudioClip gunShot;
 
-    [SerializeField]
-    private GameObject muzzleFlashPrefab; // Muzzle flash prefab
-
-    private GameObject currentMuzzleFlash; // Current muzzle flash instance
-
+    [SerializeField] private GameObject muzzleFlashPrefab;
+    private GameObject currentMuzzleFlash;
+    public Camera playerCamera; 
     void Start()
     {
         // Calculate fireRate based on rounds per second
         fireRate = 1f / roundsPerSecond;
-
         source = GetComponent<AudioSource>();
+        playerCamera = FindAnyObjectByType<Camera>();
     }
 
     void Update()
     {
-        if (!isLocalPlayer) return; // Ensure that only the local player can control their gun
+        if (!isLocalPlayer) return;
 
         if (Input.GetKeyDown(key))
         {
@@ -78,7 +74,7 @@ public class GunShoot : NetworkBehaviour
         {
             source.PlayOneShot(gunShot);
 
-            // Instantiate and show the muzzle flash
+            // Show the muzzle flash
             if (muzzleFlashPrefab != null)
             {
                 if (currentMuzzleFlash != null)
@@ -89,8 +85,11 @@ public class GunShoot : NetworkBehaviour
                 Destroy(currentMuzzleFlash, 0.1f); // Destroy after a short delay
             }
 
-            // Instantiate the bullet at the spawn point's position and rotation
-            CmdShoot(); // Call command to handle bullet instantiation on the server
+            // Calculate the bullet direction using a raycast from the center of the screen
+            Vector3 bulletDirection = GetShootDirection();
+
+            // Call command to handle bullet instantiation on the server
+            CmdShoot(bulletDirection);
         }
         else
         {
@@ -98,30 +97,56 @@ public class GunShoot : NetworkBehaviour
         }
     }
 
-    [Command]
-    void CmdShoot()
+    Vector3 GetShootDirection()
+{
+    Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)); // Ray from the center of the screen
+    RaycastHit hit;
+
+    if (Physics.Raycast(ray, out hit))
     {
-        // Instantiate the bullet on the server
-        GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
-        NetworkServer.Spawn(bullet);
-
-        // Set the bullet's velocity
-        Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
-        if (bulletRb != null)
-        {
-            bulletRb.velocity = bulletSpawnPoint.forward * bulletSpeed;
-        }
-        else
-        {
-            Debug.LogError("The bulletPrefab does not have a Rigidbody component.");
-        }
-
-        // Optionally handle muzzle flash instantiation on the server
-        if (muzzleFlashPrefab != null)
-        {
-            GameObject muzzleFlash = Instantiate(muzzleFlashPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
-            NetworkServer.Spawn(muzzleFlash);
-            Destroy(muzzleFlash, 0.1f); // Destroy after a short delay
-        }
+        // If we hit something, return the direction to the hit point
+        return (hit.point - bulletSpawnPoint.position).normalized;
     }
+    else
+    {
+        // If nothing was hit, shoot straight ahead
+        return playerCamera.transform.forward;
+    }
+}
+
+[Command]
+void CmdShoot(Vector3 bulletDirection)
+{
+    // Instantiate the bullet on the server
+    GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity);
+    NetworkServer.Spawn(bullet);
+
+    // Set the bullet's velocity based on the calculated direction
+    Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
+    if (bulletRb != null)
+    {
+        bulletRb.velocity = bulletDirection * bulletSpeed;
+    }
+    else
+    {
+        Debug.LogError("The bulletPrefab does not have a Rigidbody component.");
+    }
+
+    // Ignore collisions between the bullet and the player (or the shooter)
+    Collider bulletCollider = bullet.GetComponent<Collider>();
+    Collider playerCollider = GetComponent<Collider>(); // Assuming the script is on the player
+    if (bulletCollider != null && playerCollider != null)
+    {
+        Physics.IgnoreCollision(bulletCollider, playerCollider);
+    }
+
+    // Optionally handle muzzle flash instantiation on the server
+    if (muzzleFlashPrefab != null)
+    {
+        GameObject muzzleFlash = Instantiate(muzzleFlashPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+        NetworkServer.Spawn(muzzleFlash);
+        Destroy(muzzleFlash, 0.1f); // Destroy after a short delay
+    }
+}
+
 }

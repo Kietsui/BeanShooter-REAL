@@ -20,12 +20,9 @@ public class PlayerController : NetworkBehaviour
     [HideInInspector]
     public bool canMove = true;
 
-    [SerializeField]
-    private float cameraYOffset = 0.4f;
+    [SerializeField] private float cameraYOffset = 0.4f;
+    [SerializeField] private RotateGun rotateGun;
     private Camera playerCamera;
-
-    [SerializeField]
-    private RotateGun rotateGun; // Reference to the RotateGun script
 
     void Start()
     {
@@ -63,10 +60,10 @@ public class PlayerController : NetworkBehaviour
 
         bool isRunning = false;
 
-        // Press Left Shift to run
+        // Hardcoded sprint keybind
         isRunning = Input.GetKey(KeyCode.LeftShift);
 
-        // We are grounded, so recalculate move direction based on axis
+        // recalculate move direction based on axis
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
 
@@ -89,7 +86,6 @@ public class PlayerController : NetworkBehaviour
             moveDirection.y -= gravity * Time.deltaTime;
         }
 
-        // Move the controller
         characterController.Move(moveDirection * Time.deltaTime);
 
         // Player and Camera rotation
