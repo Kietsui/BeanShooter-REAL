@@ -12,7 +12,6 @@ public class RotateGun : MonoBehaviour
 
     private void Update()
     {
-        // Ensure we only run this if we have the player camera set
         if (playerCamera == null) return;
 
         // Rotate the gun's parent to match the camera's rotation
