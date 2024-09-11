@@ -20,8 +20,7 @@ public class GunShoot : NetworkBehaviour
 
     [SerializeField] private GameObject muzzleFlashPrefab;
     private GameObject currentMuzzleFlash;
-    public Camera playerCamera; 
-    private RectTransform crosshairRectTransform;  // Reference to the crosshair RectTransform
+    public Camera playerCamera;
 
     void Start()
     {
@@ -29,13 +28,6 @@ public class GunShoot : NetworkBehaviour
         fireRate = 1f / roundsPerSecond;
         source = GetComponent<AudioSource>();
         playerCamera = FindAnyObjectByType<Camera>();
-
-        // Find the crosshair RectTransform in the Canvas
-        crosshairRectTransform = FindObjectOfType<Canvas>().transform.Find("Crosshair").GetComponent<RectTransform>();
-        if (crosshairRectTransform == null)
-        {
-            Debug.LogError("Crosshair RectTransform not found. Please check the hierarchy.");
-        }
     }
 
     void Update()
@@ -94,7 +86,7 @@ public class GunShoot : NetworkBehaviour
                 Destroy(currentMuzzleFlash, 0.1f); // Destroy after a short delay
             }
 
-            // Calculate the bullet direction based on the crosshair position
+            // Get the shoot direction from the raycast or fallback to the forward direction
             Vector3 bulletDirection = GetShootDirection();
 
             // Call command to handle bullet instantiation on the server
@@ -108,29 +100,30 @@ public class GunShoot : NetworkBehaviour
 
     Vector3 GetShootDirection()
     {
-        if (crosshairRectTransform == null)
-        {
-            Debug.LogError("Crosshair RectTransform is not assigned.");
-            return playerCamera.transform.forward;
-        }
-
-        // Convert crosshair position to screen coordinates
-        Vector2 crosshairScreenPosition = RectTransformUtility.WorldToScreenPoint(playerCamera, crosshairRectTransform.position);
-
-        // Create a ray from the camera through the crosshair
-        Ray ray = playerCamera.ScreenPointToRay(crosshairScreenPosition);
+        // Cast a ray from the center of the screen
+        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
         RaycastHit hit;
 
+        // If raycast hits something
         if (Physics.Raycast(ray, out hit))
         {
-            // Return the direction from bullet spawn point to the hit point
-            return (hit.point - bulletSpawnPoint.position).normalized;
+             float distanceToHit = Vector3.Distance(bulletSpawnPoint.position, hit.point);
+
+            // If the hit point is too close to the bullet spawn point, shoot forward
+            if (distanceToHit < Vector3.Distance(bulletSpawnPoint.position, playerCamera.transform.position))
+            {
+                Debug.Log("Raycast hit too close, using forward direction.");
+                return bulletSpawnPoint.forward; // Fire straight forward from the spawn point
+            }
+            else
+            {
+                // If the hit point is valid (far enough), aim towards the hit point
+                return (hit.point - bulletSpawnPoint.position).normalized;
+            }
         }
-        else
-        {
-            // If nothing is hit, return the ray's direction
-            return ray.direction;
-        }
+
+        // If no raycast hit, shoot straight forward
+        return bulletSpawnPoint.forward;
     }
 
     [Command]
