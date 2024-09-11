@@ -21,12 +21,21 @@ public class GunShoot : NetworkBehaviour
     [SerializeField] private GameObject muzzleFlashPrefab;
     private GameObject currentMuzzleFlash;
     public Camera playerCamera; 
+    private RectTransform crosshairRectTransform;  // Reference to the crosshair RectTransform
+
     void Start()
     {
         // Calculate fireRate based on rounds per second
         fireRate = 1f / roundsPerSecond;
         source = GetComponent<AudioSource>();
         playerCamera = FindAnyObjectByType<Camera>();
+
+        // Find the crosshair RectTransform in the Canvas
+        crosshairRectTransform = FindObjectOfType<Canvas>().transform.Find("Crosshair").GetComponent<RectTransform>();
+        if (crosshairRectTransform == null)
+        {
+            Debug.LogError("Crosshair RectTransform not found. Please check the hierarchy.");
+        }
     }
 
     void Update()
@@ -85,7 +94,7 @@ public class GunShoot : NetworkBehaviour
                 Destroy(currentMuzzleFlash, 0.1f); // Destroy after a short delay
             }
 
-            // Calculate the bullet direction using a raycast from the center of the screen
+            // Calculate the bullet direction based on the crosshair position
             Vector3 bulletDirection = GetShootDirection();
 
             // Call command to handle bullet instantiation on the server
@@ -98,55 +107,64 @@ public class GunShoot : NetworkBehaviour
     }
 
     Vector3 GetShootDirection()
-{
-    Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)); // Ray from the center of the screen
-    RaycastHit hit;
+    {
+        if (crosshairRectTransform == null)
+        {
+            Debug.LogError("Crosshair RectTransform is not assigned.");
+            return playerCamera.transform.forward;
+        }
 
-    if (Physics.Raycast(ray, out hit))
-    {
-        // If we hit something, return the direction to the hit point
-        return (hit.point - bulletSpawnPoint.position).normalized;
-    }
-    else
-    {
-        // If nothing was hit, shoot straight ahead
-        return playerCamera.transform.forward;
-    }
-}
+        // Convert crosshair position to screen coordinates
+        Vector2 crosshairScreenPosition = RectTransformUtility.WorldToScreenPoint(playerCamera, crosshairRectTransform.position);
 
-[Command]
-void CmdShoot(Vector3 bulletDirection)
-{
-    // Instantiate the bullet on the server
-    GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity);
-    NetworkServer.Spawn(bullet);
+        // Create a ray from the camera through the crosshair
+        Ray ray = playerCamera.ScreenPointToRay(crosshairScreenPosition);
+        RaycastHit hit;
 
-    // Set the bullet's velocity based on the calculated direction
-    Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
-    if (bulletRb != null)
-    {
-        bulletRb.velocity = bulletDirection * bulletSpeed;
-    }
-    else
-    {
-        Debug.LogError("The bulletPrefab does not have a Rigidbody component.");
+        if (Physics.Raycast(ray, out hit))
+        {
+            // Return the direction from bullet spawn point to the hit point
+            return (hit.point - bulletSpawnPoint.position).normalized;
+        }
+        else
+        {
+            // If nothing is hit, return the ray's direction
+            return ray.direction;
+        }
     }
 
-    // Ignore collisions between the bullet and the player (or the shooter)
-    Collider bulletCollider = bullet.GetComponent<Collider>();
-    Collider playerCollider = GetComponent<Collider>(); // Assuming the script is on the player
-    if (bulletCollider != null && playerCollider != null)
+    [Command]
+    void CmdShoot(Vector3 bulletDirection)
     {
-        Physics.IgnoreCollision(bulletCollider, playerCollider);
-    }
+        // Instantiate the bullet on the server
+        GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity);
+        NetworkServer.Spawn(bullet);
 
-    // Optionally handle muzzle flash instantiation on the server
-    if (muzzleFlashPrefab != null)
-    {
-        GameObject muzzleFlash = Instantiate(muzzleFlashPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
-        NetworkServer.Spawn(muzzleFlash);
-        Destroy(muzzleFlash, 0.1f); // Destroy after a short delay
-    }
-}
+        // Set the bullet's velocity based on the calculated direction
+        Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
+        if (bulletRb != null)
+        {
+            bulletRb.velocity = bulletDirection * bulletSpeed;
+        }
+        else
+        {
+            Debug.LogError("The bulletPrefab does not have a Rigidbody component.");
+        }
 
+        // Ignore collisions between the bullet and the player (or the shooter)
+        Collider bulletCollider = bullet.GetComponent<Collider>();
+        Collider playerCollider = GetComponent<Collider>(); // Assuming the script is on the player
+        if (bulletCollider != null && playerCollider != null)
+        {
+            Physics.IgnoreCollision(bulletCollider, playerCollider);
+        }
+
+        // Optionally handle muzzle flash instantiation on the server
+        if (muzzleFlashPrefab != null)
+        {
+            GameObject muzzleFlash = Instantiate(muzzleFlashPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+            NetworkServer.Spawn(muzzleFlash);
+            Destroy(muzzleFlash, 0.1f); // Destroy after a short delay
+        }
+    }
 }
