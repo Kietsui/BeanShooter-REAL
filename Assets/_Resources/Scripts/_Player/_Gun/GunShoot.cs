@@ -7,6 +7,7 @@ public class GunShoot : NetworkBehaviour
     public Transform bulletSpawnPoint;  // Reference to the bullet spawn point
     public GameObject bulletPrefab;     // Reference to the bullet prefab
     public float bulletSpeed = 10f;     // Speed of the bullet
+    public float distanceTreshold;
     public KeyCode key;                 // The key to trigger shooting
 
     [Tooltip("Fire rate in rounds per second (RPS)")]
@@ -99,32 +100,43 @@ public class GunShoot : NetworkBehaviour
     }
 
     Vector3 GetShootDirection()
+{
+    // Cast a ray from the center of the screen
+    Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
+    RaycastHit hit;
+
+    // If raycast hits something
+    if (Physics.Raycast(ray, out hit))
     {
-        // Cast a ray from the center of the screen
-        Ray ray = playerCamera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
-        RaycastHit hit;
-
-        // If raycast hits something
-        if (Physics.Raycast(ray, out hit))
+        // Check if the object hit has the "Player" tag
+        if (hit.collider.CompareTag("Player"))
         {
-             float distanceToHit = Vector3.Distance(bulletSpawnPoint.position, hit.point);
-
-            // If the hit point is too close to the bullet spawn point, shoot forward
-            if (distanceToHit < Vector3.Distance(bulletSpawnPoint.position, playerCamera.transform.position))
-            {
-                Debug.Log("Raycast hit too close, using forward direction.");
-                return bulletSpawnPoint.forward; // Fire straight forward from the spawn point
-            }
-            else
-            {
-                // If the hit point is valid (far enough), aim towards the hit point
-                return (hit.point - bulletSpawnPoint.position).normalized;
-            }
+            Debug.Log("Raycast hit a player.");
+            // Always aim directly at the player
+            return (hit.point - bulletSpawnPoint.position).normalized;
         }
 
-        // If no raycast hit, shoot straight forward
-        return bulletSpawnPoint.forward;
+        // Get the distance between the bullet spawn point and the hit point
+        float distanceToHit = Vector3.Distance(bulletSpawnPoint.position, hit.point);
+
+        // Check if the hit point is less than the distance threshold
+        if (distanceToHit < distanceTreshold) // Use a threshold value (e.g., 1 meter) as per your requirement
+        {
+            Debug.Log("Raycast hit too close, using forward direction.");
+            return bulletSpawnPoint.forward; // Fire straight forward from the spawn point
+        }
+        else
+        {
+            // If the hit point is valid (far enough), aim towards the hit point
+            return (hit.point - bulletSpawnPoint.position).normalized;
+        }
     }
+
+    // If no raycast hit, shoot straight forward
+    return bulletSpawnPoint.forward;
+}
+
+
 
     [Command]
     void CmdShoot(Vector3 bulletDirection)
